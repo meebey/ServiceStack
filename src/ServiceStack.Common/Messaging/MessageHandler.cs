@@ -155,7 +155,13 @@ namespace ServiceStack.Messaging
                     if (mqReplyTo == null)
                     {
                         var responseType = response.GetType();
+#if __MonoCS__
+                        // work around Mono 2.6.7 compiler bug:
+                        // System.Type.IsUserType' is inaccessible due to its protection level
+                        if (!StringExtensions.IsUserType(responseType)) return;
+#else
                         if (!responseType.IsUserType()) return;
+#endif
                         mqReplyTo = new QueueNames(responseType).In;
                     }
                     
@@ -173,8 +179,12 @@ namespace ServiceStack.Messaging
                                 .Fmt(mqReplyTo, replyClient.GetType().Name), ex);
 
                             var responseType = response.GetType();
+#if __MonoCS__
+                            if (!StringExtensions.IsUserType(responseType)) return;
+#else
                             if (!responseType.IsUserType()) return;
-                            
+#endif
+
                             mqReplyTo = new QueueNames(responseType).In;
                         }
                     }
